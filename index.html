@@ -508,10 +508,7 @@
         <input type="range" class="volume-slider" id="vol-slider" min="0" max="1" step="0.05" value="0.7"/>
       </div>
       <p class="player-note">
-        🎵 To add music, open <strong>index.html</strong>, find
-        <code style="font-size:10px;background:var(--warm);padding:1px 4px;border-radius:3px;">i_love_you_so.mp3</code>
-        and replace with a direct link to an MP3, or upload a file named
-        <strong>i_love_you_so.mp3</strong> to the repo.
+        🎵
       </p>
       <audio id="bg-audio" loop>
         <source src="i_love_you_so.mp3" type="audio/mpeg"/>
@@ -572,9 +569,6 @@
   <section id="gallery">
     <div class="section-eyebrow fade-in">Our memories</div>
     <p class="fade-in d1" style="color:var(--muted);font-size:14px;line-height:1.7;">
-      Click any frame to add a photo from your device. These stay in your browser
-      — to make them permanent, add image files to the repo and update the
-      <code style="background:var(--warm);padding:1px 5px;border-radius:3px;font-size:12px;">src</code> attributes in the HTML.
     </p>
     <div class="gallery-grid fade-in d2">
 
@@ -663,7 +657,6 @@
       </div>
 
     </div>
-    <p class="gallery-hint fade-in d3">Click any frame to upload a photo</p>
   </section>
 
   <!-- ── REASONS I LOVE YOU ── -->
@@ -747,19 +740,38 @@
     document.addEventListener('click', e => { if (!document.getElementById('player-wrap').contains(e.target)) panel.classList.remove('open'); });
 
     audio.volume = 0.7;
-    playBtn.addEventListener('click', () => {
-      if (audio.paused) {
-        audio.play().catch(() => {});
-        playBtn.innerHTML = pauseIconSVG;
-        playBtn.classList.add('active');
-      } else {
-        audio.pause();
-        playBtn.innerHTML = playIconSVG;
-        playBtn.classList.remove('active');
-      }
-    });
-    volSlider.addEventListener('input', () => { audio.volume = volSlider.value; });
 
+// ── MOBILE AUTOPLAY: start music on first touch/click anywhere ──
+let audioStarted = false;
+function startAudioOnInteraction() {
+  if (audioStarted) return;
+  const src = audio.querySelector('source')?.getAttribute('src') || '';
+  if (!src || src === 'YOUR_MUSIC_URL') return;
+  audioStarted = true;
+  audio.play().then(() => {
+    playBtn.innerHTML = pauseIconSVG;
+    playBtn.classList.add('active');
+  }).catch(() => { audioStarted = false; });
+  document.removeEventListener('touchstart', startAudioOnInteraction);
+  document.removeEventListener('click', startAudioOnInteraction);
+}
+document.addEventListener('touchstart', startAudioOnInteraction, { once: true });
+document.addEventListener('click',      startAudioOnInteraction, { once: true });
+
+playBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (audio.paused) {
+    audio.play().catch(() => {});
+    playBtn.innerHTML = pauseIconSVG;
+    playBtn.classList.add('active');
+    audioStarted = true;
+  } else {
+    audio.pause();
+    playBtn.innerHTML = playIconSVG;
+    playBtn.classList.remove('active');
+  }
+});
+volSlider.addEventListener('input', () => { audio.volume = volSlider.value; });
     // Update track name from src
     const src = audio.querySelector('source')?.getAttribute('src') || '';
     if (src && src !== 'YOUR_MUSIC_URL') {
